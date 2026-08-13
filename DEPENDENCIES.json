@@ -1,0 +1,16 @@
+{
+  "comment": "ADD these dependencies to your existing package.json",
+  "dependencies_to_add": {
+    "mongodb": "^6.5.0",
+    "next-auth": "^4.24.7",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies_to_add": {
+    "tsx": "^4.7.0"
+  },
+  "scripts_to_add": {
+    "seed": "tsx scripts/seed.ts"
+  },
+  "full_install_command": "pnpm add mongodb next-auth dotenv && pnpm add -D tsx",
+  "then_seed": "pnpm seed"
+}
