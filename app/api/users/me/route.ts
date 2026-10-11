@@ -1,0 +1,8 @@
+import { NextRequest } from "next/server"
+import { z } from "zod"
+import { getCurrentUser } from "@/lib/auth"
+import { query } from "@/lib/db"
+import { error, ok, parseBody } from "@/lib/api"
+const schema=z.object({handle:z.string().trim().min(2).max(30).optional(),area:z.string().trim().max(120).optional(),community:z.string().trim().max(120).optional(),bio:z.string().trim().max(2000).optional(),skillsOffered:z.array(z.string().trim()).max(30).optional(),skillsWanted:z.array(z.string().trim()).max(30).optional()})
+export async function GET(){const u=await getCurrentUser();if(!u)return error("Unauthorised",401);const r=await query(`select id::text as "_id",id,name,email,image,handle,area,community,bio,skills_offered as "skillsOffered",skills_wanted as "skillsWanted",verified,rating,review_count as "reviewCount",completed_swaps as "completedSwaps",response_rate as "responseRate",member_since as "memberSince" from users where id=$1`,[u.id]);return r.rowCount?ok(r.rows[0]):error("User not found",404)}
+export async function PATCH(req:NextRequest){const u=await getCurrentUser();if(!u)return error("Unauthorised",401);const p=parseBody(schema,await req.json());if(!p.ok)return p.response;const map:any={handle:"handle",area:"area",community:"community",bio:"bio",skillsOffered:"skills_offered",skillsWanted:"skills_wanted"};const sets:string[]=[];const vals:any[]=[];for(const [k,v] of Object.entries(p.data)){sets.push(`${map[k]}=$${vals.length+1}`);vals.push(v)}if(!sets.length)return error("No fields to update",400);vals.push(u.id);try{await query(`update users set ${sets.join(",")},updated_at=now() where id=$${vals.length}`,vals)}catch(e:any){if(e.code==="23505")return error("That handle is already in use",409);throw e}return ok({success:true})}

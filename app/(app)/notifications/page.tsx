@@ -1,0 +1,6 @@
+import Link from "next/link"
+import { Bell } from "lucide-react"
+import { getCurrentUser } from "@/lib/auth"
+import { query } from "@/lib/db"
+import { PageContainer,PageHeader } from "@/components/page-header"
+export default async function NotificationsPage(){const u=await getCurrentUser();if(!u)return null;const r=await query(`select *,id::text as "_id" from notifications where user_id=$1 order by created_at desc limit 50`,[u.id]);return <PageContainer><PageHeader title="Notifications" description="Your recent activity."/><div className="mt-6 space-y-3">{r.rows.length===0?<div className="flex flex-col items-center gap-3 py-16 text-center"><Bell className="size-10 text-muted-foreground/40"/><p className="text-sm text-muted-foreground">No notifications yet.</p></div>:r.rows.map(n=><div key={n._id} className={`rounded-lg border p-4 ${n.read?"border-border bg-card":"border-primary/30 bg-primary/5"}`}><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-medium">{n.title}</p><p className="mt-0.5 text-sm text-muted-foreground">{n.body}</p></div>{!n.read&&<span className="mt-1 size-2 shrink-0 rounded-full bg-primary"/>}</div>{n.link&&<Link href={n.link} className="mt-2 inline-block text-xs text-primary hover:underline">View →</Link>}</div>)}</div></PageContainer>}
